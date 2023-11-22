@@ -20,7 +20,7 @@ def readFloatRandomPatches(fileName, width=1, num_sample=1, patch_size=1, rows=N
             img = []
             for p_row in range(patch_size):
                 fin.seek(4 * (width * (row + p_row) + col))
-                img.append(np.frombuffer(fin.read(4 * patch_size), dtype=">f4").astype(np.float))
+                img.append(np.frombuffer(fin.read(4 * patch_size), dtype=">f4").astype(float))
             patches.append(np.reshape(img, [patch_size, patch_size]))
     return patches, rows, cols, height
 
@@ -127,8 +127,8 @@ class IfgSim():
     self.height = height
     self.rayleigh_scale = rayleigh_scale
     self.x, self.y = np.meshgrid(range(self.width),range(self.height))
-    self.x = self.x.astype(np.float)
-    self.y = self.y.astype(np.float)
+    self.x = self.x.astype(float)
+    self.y = self.y.astype(float)
     self.signal = np.zeros((height,width))
     self.signal_gauss_bubbles = []
     self.signal_ellipses = []
@@ -323,7 +323,7 @@ class IfgSim():
       self.signal[params[0]] += params[1]
 
     # then add the buildings
-    vacant_lots = np.ones((self.height,self.width)).astype(np.bool)
+    vacant_lots = np.ones((self.height,self.width)).astype(bool)
     for params in sorted(self.signal_buildings):
       _,amp,w,h,d,px,py = params
       #print params

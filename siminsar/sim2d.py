@@ -10,8 +10,8 @@ class Signal_2d():
     self.height = height
     self.rayleigh_scale = rayleigh_scale
     self.x, self.y = np.meshgrid(range(self.width),range(self.height))
-    self.x = self.x.astype(np.float)
-    self.y = self.y.astype(np.float)
+    self.x = self.x.astype(float)
+    self.y = self.y.astype(float)
     self.signal = np.zeros((height,width))
     self.signal_gauss_bubbles = []
     self.signal_ellipses = []
@@ -219,7 +219,7 @@ class Signal_2d():
         self.signal += eval_3d_polygon(self.x, self.y, params)*(-1 if np.random.rand()>0.5 else 1)
 
     # then add the buildings
-    vacant_lots = np.ones((self.height,self.width)).astype(np.bool)
+    vacant_lots = np.ones((self.height,self.width)).astype(bool)
     for params in sorted(self.signal_buildings):
       _,amplitude,w,h,d,px,py = params
       #print params

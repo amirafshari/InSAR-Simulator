@@ -10,8 +10,8 @@ class Signal_3d(object):
     self.height = height
     self.depth = depth
     self.x, self.y = np.meshgrid(range(self.width),range(self.height))
-    self.x = self.x.astype(np.float)
-    self.y = self.y.astype(np.float)
+    self.x = self.x.astype(float)
+    self.y = self.y.astype(float)
     self.signal = np.zeros((depth,height,width))
     self.hgterr = np.zeros((height,width))
     self.rate = np.zeros((height,width))
