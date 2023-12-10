@@ -216,6 +216,31 @@ class IfgSim():
 
             vacant_lots = (vacant_lots) & (cur_building_mask == False)
 
+
+    def eq8(self, vector):
+        n = len(vector)
+        for i in range(1, n-1):
+            vector[0] = vector[i+1] - vector[i] # first row/column
+            vector[n-1] = vector[i] - vector[i-1] # last row/column
+            vector[i] = (vector[i+1] - vector[i-1])/2 # other elements
+
+        return vector
+
+    def range_gradient(self, wrap_count):
+        n = len(wrap_count)
+        for i in range(1, n):
+            wrap_count[i,:] = eq8(wrap_count[i,:])
+
+        return wrap_count
+
+
+    def azimuth_gradient(self, wrap_count):
+        n = len(wrap_count)
+        for i in range(1, n):
+            wrap_count[:,i] = eq8(wrap_count[:,i])
+
+        return wrap_count
+
     def itoh_condition(self, phase_array):
         unwrapped = np.zeros_like(phase_array)
         unwrapped[0] = phase_array[0]
@@ -250,7 +275,7 @@ class IfgSim():
         for j in range(phase_array_2d.shape[1]):
             unwrapped_2d[:, j] = self.itoh_condition(unwrapped_2d[:, j])
 
-        return unwrapped_range, unwrapped_azimuth, unwrapped_2d
+        return unwrapped_azimuth, unwrapped_range, unwrapped_2d
 
 
     def update(self, sigma=0.2):
@@ -586,41 +611,59 @@ def generate_fix_dataset_by_config(config):
         slc1_name = "%dslc1" % (i)
         slc2_name = "%dslc2" % (i)
 
+        # Coherence
         filename = "%s/%s_%s%s" % (config['coh_path'], slc1_name, slc2_name, config['coh_ext'])
         plt.imsave("%s.png" % filename, sim_cohs, cmap="gray")
         writeFloat(filename, sim_cohs)
-        filename = "%s/%s_%s%s_minmax" % (config['coh_path'], slc1_name, slc2_name, config['coh_ext'])
-        plt.imsave("%s.png" % filename, sim_cohs, cmap="gray", vmin=0, vmax=1)
 
-        filename = "%s/%s%s" % (config['rslc_path'], slc1_name, config['rslc_ext'])
-        rslc1 = sim.slc1+sim.noise1
-        writeFloatComplex(filename, rslc1)
-        writeFloatComplex(filename + ".bar.norm", normalize_slc_by_tanhmz(rslc1, True))
-        plt.imsave("%s_amp.png" % filename, np.abs(rslc1), cmap="gray")
+        # Min-Max Coherence
+        # filename = "%s/%s_%s%s_minmax" % (config['coh_path'], slc1_name, slc2_name, config['coh_ext'])
+        # plt.imsave("%s.png" % filename, sim_cohs, cmap="gray", vmin=0, vmax=1)
 
-        filename = "%s/%s%s" % (config['rslc_path'], slc2_name, config['rslc_ext'])
-        rslc2 = sim.slc2+sim.noise2
-        writeFloatComplex(filename, rslc2)
-        writeFloatComplex(filename + ".bar.norm", normalize_slc_by_tanhmz(rslc2, True))
 
+        # Noisy Coherence SLC1
+        # filename = "%s/%s%s" % (config['rslc_path'], slc1_name, config['rslc_ext'])
+        # rslc1 = sim.slc1 + sim.noise1
+        # writeFloatComplex(filename, rslc1)
+        # writeFloatComplex(filename + ".bar.norm", normalize_slc_by_tanhmz(rslc1, True))
+        # plt.imsave("%s_amp.png" % filename, np.abs(rslc1), cmap="gray")
+
+        # Noisy coherence SLC2
+        # filename = "%s/%s%s" % (config['rslc_path'], slc2_name, config['rslc_ext'])
+        # rslc2 = sim.slc2 + sim.noise2
+        # writeFloatComplex(filename, rslc2)
+        # writeFloatComplex(filename + ".bar.norm", normalize_slc_by_tanhmz(rslc2, True))
+        # plt.imsave("%s_amp.png" % filename, np.abs(rslc2), cmap="gray")
+
+
+        # Noisy Wrapped
         filename = "%s/%s_%s%s" % (config['noisy_path'], slc1_name, slc2_name, config['noisy_ext'])
         plt.imsave("%s.png" % filename, np.angle(sim.ifg_noisy), cmap="jet")
+        np.save('%s.npy' % filename, np.angle(sim.ifg_noisy))
         # plt.imsave("%s_amp.png" % filename, np.abs(sim.ifg_noisy), cmap="gray")
-        writeFloatComplex(filename, sim.ifg_noisy)
+        # writeFloatComplex(filename, sim.ifg_noisy)
 
+
+        # Clean Wrapped
         filename = "%s/%s_%s%s" % (config['filt_path'], slc1_name, slc2_name, config['filt_ext'])
-
         plt.imsave("%s.png" % filename, np.angle(sim.ifg), cmap="jet")
         np.save('%s.npy' % filename, np.angle(sim.ifg))
-        ranged, azimuth, unwrapped = sim.unwrap(sim.ifg)
-        np.save('%s_range.npy' % filename, ranged)
-        np.save('%s_azimuth.npy' % filename, azimuth)
+
+
+        # Unwrapped
+        unwrapped_azimuth, unwrapped_range, unwrapped = sim.unwrap(sim.ifg)
+
+        # range_gradient = range_gradient(unwrapped)
+        # azimuth_gradient = azimuth_gradient(unwrapped)
+
+        # np.save('%s_range.npy' % filename, unwrapped_range)
+        # np.save('%s_azimuth.npy' % filename, unwrapped_azimuth)
         np.save('%s_unwrapped.npy' % filename, unwrapped)
-        plt.imsave("%s_range.png" % filename, ranged, cmap="jet")
-        plt.imsave("%s_azimuth.png" % filename, azimuth, cmap="jet")
+        # plt.imsave("%s_range.png" % filename, unwrapped_range, cmap="jet")
+        # plt.imsave("%s_azimuth.png" % filename, unwrapped_azimuth, cmap="jet")
         plt.imsave("%s_unwrapped.png" % filename, unwrapped, cmap="jet")
         # plt.imsave("%s_amp.png" % filename, np.abs(sim.ifg), cmap="gray")
-        writeFloatComplex(filename, sim.ifg)
+        # writeFloatComplex(filename, sim.ifg)
 
 
 if __name__ == "__main__":
